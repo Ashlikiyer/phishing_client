@@ -36,8 +36,8 @@ export interface Email {
   spf_result: "pass" | "fail" | "neutral" | "softfail" | "none";
   dkim_result: "pass" | "fail" | "neutral" | "none";
   dmarc_result: "pass" | "fail" | "none";
-  headers: any; // EmailHeaders
-  detailed_analysis: any; // DetailedAnalysis
+  headers: Record<string, string | string[]>; // EmailHeaders
+  detailed_analysis: Record<string, unknown>; // DetailedAnalysis
 }
 
 export interface EmailFolder {

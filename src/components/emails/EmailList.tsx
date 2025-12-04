@@ -15,7 +15,6 @@ import {
   Shield,
 } from "lucide-react";
 import { EmailCard } from "./EmailCard";
-import { EmailFilters } from "./EmailFilters";
 import type { Email, ThreatLevel, AuthResult } from "../../models/email";
 
 interface FilterState {
@@ -62,20 +61,23 @@ export function EmailListComponent({
   onEmailDelete,
   onBulkDelete,
 }: EmailListProps) {
-  const [filters, setFilters] = useState<FilterState>({
-    search: "",
-    threatLevel: [],
-    spfResult: [],
-    dkimResult: [],
-    dmarcResult: [],
-    sender: "",
-    recipient: "",
-    domain: "",
-    dateRange: "all",
-    scoreRange: [0, 100],
-    hasAttachments: "all",
-    hasUrls: "all",
-  });
+  const filters: FilterState = useMemo(
+    () => ({
+      search: "",
+      threatLevel: [],
+      spfResult: [],
+      dkimResult: [],
+      dmarcResult: [],
+      sender: "",
+      recipient: "",
+      domain: "",
+      dateRange: "all",
+      scoreRange: [0, 100],
+      hasAttachments: "all",
+      hasUrls: "all",
+    }),
+    []
+  );
 
   const [sortField, setSortField] = useState<SortField>("timestamp");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");

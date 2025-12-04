@@ -34,7 +34,7 @@ export interface Alert {
 
   // Additional context
   metadata?: {
-    [key: string]: any;
+    [key: string]: unknown;
     confidence?: number;
     indicators?: string[];
     evidence_urls?: string[];
@@ -135,7 +135,7 @@ export interface AlertTemplate {
     name: string;
     type: "string" | "number" | "date" | "email" | "url";
     required: boolean;
-    default_value?: any;
+    default_value?: string | number | boolean | null;
     description: string;
   }[];
 
@@ -262,9 +262,9 @@ export interface AlertWorkflow {
     name: string;
     type: "automated" | "manual";
     action: string;
-    parameters: Record<string, any>;
+    parameters: Record<string, string | number | boolean | null>;
     delay_minutes?: number;
-    conditions?: Record<string, any>;
+    conditions?: Record<string, string | number | boolean>;
   }[];
 
   // Success/failure handling
@@ -287,7 +287,7 @@ export interface CreateAlertRequest {
   source?: string;
   affected_emails?: number;
   affected_users?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   tags?: string[];
 }
 
@@ -298,7 +298,7 @@ export interface UpdateAlertRequest {
   status?: AlertStatus;
   assignee?: string;
   tags?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface GetAlertsResponse {
@@ -343,7 +343,7 @@ export interface AlertFormData {
   tags: string[];
   affected_emails?: number;
   affected_users?: string[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Hook return types

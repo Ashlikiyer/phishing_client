@@ -15,7 +15,7 @@ interface RiskData {
   value: number;
   level: ThreatLevel;
   color: string;
-  [key: string]: any;
+  payload?: RiskData;
 }
 
 interface RiskDistributionChartProps {
@@ -30,7 +30,13 @@ export function RiskDistributionChart({
   const chartData = data || [];
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: Array<{ payload: RiskData }>;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       const percentage = ((data.value / total) * 100).toFixed(1);
@@ -42,13 +48,13 @@ export function RiskDistributionChart({
               className="w-3 h-3 rounded"
               style={{ backgroundColor: data.color }}
             ></div>
-            <span className="text-sm font-medium text-gray-900">{data.name}</span>
+            <span className="text-sm font-medium text-gray-900">
+              {data.name}
+            </span>
           </div>
           <div className="text-xs text-gray-500">
             <div className="font-medium text-gray-600">{data.value} emails</div>
-            <div className="mt-1">
-              {percentage}% of total
-            </div>
+            <div className="mt-1">{percentage}% of total</div>
           </div>
         </div>
       );
@@ -56,29 +62,38 @@ export function RiskDistributionChart({
     return null;
   };
 
-  const CustomLegend = ({ payload }: any) => {
+  const CustomLegend = ({
+    payload,
+  }: {
+    payload?: Array<{ payload: RiskData; color: string }>;
+  }) => {
     return (
       <div className="flex flex-col gap-2 mt-4 px-4">
-        {payload.map((entry: any, index: number) => {
-          const percentage = ((entry.payload.value / total) * 100).toFixed(1);
-          return (
-            <div key={index} className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-colors">
+        {payload?.map(
+          (entry: { payload: RiskData; color: string }, index: number) => {
+            const percentage = ((entry.payload.value / total) * 100).toFixed(1);
+            return (
               <div
-                className="w-3 h-3 rounded shrink-0"
-                style={{ backgroundColor: entry.color }}
-              ></div>
-              <div className="flex items-center gap-2 flex-1">
-                <span className="text-sm font-medium text-gray-600">{entry.payload.name}</span>
-                <span className="text-sm font-bold text-gray-900 ml-auto">
-                  {entry.payload.value}
-                </span>
-                <span className="text-xs text-gray-500">
-                  ({percentage}%)
-                </span>
+                key={index}
+                className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-colors"
+              >
+                <div
+                  className="w-3 h-3 rounded shrink-0"
+                  style={{ backgroundColor: entry.color }}
+                ></div>
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-sm font-medium text-gray-600">
+                    {entry.payload.name}
+                  </span>
+                  <span className="text-sm font-bold text-gray-900 ml-auto">
+                    {entry.payload.value}
+                  </span>
+                  <span className="text-xs text-gray-500">({percentage}%)</span>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          }
+        )}
       </div>
     );
   };
@@ -93,7 +108,15 @@ export function RiskDistributionChart({
               <div
                 key={i}
                 className={`h-5 bg-gray-100 rounded animate-pulse ${
-                  i === 0 ? 'w-4/5' : i === 1 ? 'w-7/10' : i === 2 ? 'w-3/5' : i === 3 ? 'w-3/4' : 'w-13/20'
+                  i === 0
+                    ? "w-4/5"
+                    : i === 1
+                    ? "w-7/10"
+                    : i === 2
+                    ? "w-3/5"
+                    : i === 3
+                    ? "w-3/4"
+                    : "w-13/20"
                 }`}
               ></div>
             ))}
@@ -130,18 +153,29 @@ export function RiskDistributionChart({
 
         {/* Center Statistics Card */}
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-xl p-4 shadow-md min-w-36 max-w-44 max-h-64 overflow-y-auto">
-          <div className="text-xl font-bold text-gray-900 leading-tight mb-1">{total}</div>
-          <div className="text-xs text-gray-500 uppercase tracking-wider mb-3 font-medium">Total Emails</div>
+          <div className="text-xl font-bold text-gray-900 leading-tight mb-1">
+            {total}
+          </div>
+          <div className="text-xs text-gray-500 uppercase tracking-wider mb-3 font-medium">
+            Total Emails
+          </div>
           <div className="flex flex-col gap-2">
             {chartData.map((item, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 rounded bg-gray-50 hover:bg-gray-100 transition-colors">
+              <div
+                key={index}
+                className="flex items-center gap-2 p-2 rounded bg-gray-50 hover:bg-gray-100 transition-colors"
+              >
                 <div
                   className="w-2 h-2 rounded-full shrink-0"
                   style={{ backgroundColor: item.color }}
                 ></div>
                 <div className="flex justify-between items-center flex-1 min-w-0">
-                  <span className="text-xs text-gray-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis">{item.name}</span>
-                  <span className="text-xs font-bold text-gray-900 ml-2 shrink-0">{item.value}</span>
+                  <span className="text-xs text-gray-600 font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                    {item.name}
+                  </span>
+                  <span className="text-xs font-bold text-gray-900 ml-2 shrink-0">
+                    {item.value}
+                  </span>
                 </div>
               </div>
             ))}

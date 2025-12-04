@@ -7,6 +7,7 @@ import { EmailDetailModal } from "../../components/emails/EmailDetailModal";
 import { EnhancedEmailFilters } from "../../components/emails/EnhancedEmailFilters";
 import { useApi } from "../../contexts/ApiContext";
 import type { Email } from "../../models/email";
+import type { EmailFilterParams } from "../../types/email";
 
 // Define the actual API response structure
 interface EmailsApiResponse {
@@ -26,7 +27,7 @@ export function Emails() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(50); // Emails per page
-  const [filters, setFilters] = useState<any>(null);
+  const [filters, setFilters] = useState<EmailFilterParams | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -35,7 +36,10 @@ export function Emails() {
         setLoading(true);
 
         // Fetch all emails from the API
-        const response = await dataFetch<EmailsApiResponse>('/emails/all?limit=1000', 'GET');
+        const response = await dataFetch<EmailsApiResponse>(
+          "/emails/all?limit=1000",
+          "GET"
+        );
 
         console.log(
           "Emails page fetched all emails:",
@@ -202,7 +206,10 @@ export function Emails() {
       setLoading(true);
 
       // Fetch all emails from the API (in production, you may want to implement server-side filtering)
-      const response = await dataFetch<EmailsApiResponse>('/emails/all?limit=1000', 'GET');
+      const response = await dataFetch<EmailsApiResponse>(
+        "/emails/all?limit=1000",
+        "GET"
+      );
 
       setEmailsData(response);
     } catch (err) {
@@ -282,13 +289,20 @@ export function Emails() {
   };
 
   // Handle filter changes
-  const handleFiltersChange = (newFilters: any) => {
+  const handleFiltersChange = (newFilters: EmailFilterParams) => {
     setFilters(newFilters);
     setCurrentPage(1); // Reset to first page when filters change
   };
 
   // Handle search
-  const handleSearch = (term: string, options?: any) => {
+  const handleSearch = (
+    term: string,
+    options?: {
+      threatLevel?: string;
+      confidence?: string;
+      dateRange?: { start: string; end: string };
+    }
+  ) => {
     setSearchTerm(term);
     if (options) {
       // Apply additional search options as filters
@@ -353,11 +367,15 @@ export function Emails() {
     const stats = {
       total: emailsData.pagination?.total || allEmails.length,
       phishing: allEmails.filter((e: Email) => {
-        const risk = mapRiskLevel(e.threat_summary?.overall_risk || "legitimate");
+        const risk = mapRiskLevel(
+          e.threat_summary?.overall_risk || "legitimate"
+        );
         return risk === "phishing";
       }).length,
       legitimate: allEmails.filter((e: Email) => {
-        const risk = mapRiskLevel(e.threat_summary?.overall_risk || "legitimate");
+        const risk = mapRiskLevel(
+          e.threat_summary?.overall_risk || "legitimate"
+        );
         return risk === "legitimate";
       }).length,
     };
@@ -491,14 +509,10 @@ export function Emails() {
           <div className="text-3xl font-bold text-white mb-2">
             {stats.phishing}
           </div>
-          <div className="text-sm font-medium text-gray-400 mb-2">
-            Phishing
-          </div>
+          <div className="text-sm font-medium text-gray-400 mb-2">Phishing</div>
           <div className="flex items-center gap-2">
             <span className="text-red-400">▲</span>
-            <span className="text-xs text-gray-500">
-              Threats detected
-            </span>
+            <span className="text-xs text-gray-500">Threats detected</span>
           </div>
         </div>
 
@@ -506,7 +520,9 @@ export function Emails() {
           <div className="text-3xl font-bold text-white mb-2">
             {stats.legitimate}
           </div>
-          <div className="text-sm font-medium text-gray-400 mb-2">Legitimate</div>
+          <div className="text-sm font-medium text-gray-400 mb-2">
+            Legitimate
+          </div>
           <div className="flex items-center gap-2">
             <span className="text-green-400">▼</span>
             <span className="text-xs text-gray-500">Safe emails</span>

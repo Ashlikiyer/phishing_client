@@ -9,7 +9,12 @@ import { IPIntelligenceTable } from "../../components/analytics/IPIntelligenceTa
 import { EmailIntelligenceTable } from "../../components/analytics/EmailIntelligenceTable";
 import { useApi } from "../../contexts/ApiContext";
 import type { Email } from "../../models/email";
-import type { ThreatMetrics, ThreatTrend, DomainIntelligence, IPIntelligence } from "../../models/analytics";
+import type {
+  ThreatMetrics,
+  ThreatTrend,
+  DomainIntelligence,
+  IPIntelligence,
+} from "../../models/analytics";
 
 // Define the actual API response structure (same as Emails page)
 interface EmailsApiResponse {
@@ -36,11 +41,16 @@ export function Analytics() {
       try {
         setLoading(true);
         // Fetch all emails for analytics calculations (same endpoint as Emails page)
-        const response = await dataFetch<EmailsApiResponse>('/emails/all?limit=1000', 'GET');
+        const response = await dataFetch<EmailsApiResponse>(
+          "/emails/all?limit=1000",
+          "GET"
+        );
         console.log("Analytics page fetched emails:", response);
         setEmailsData(response);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch analytics data');
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch analytics data"
+        );
       } finally {
         setLoading(false);
       }
@@ -86,16 +96,22 @@ export function Analytics() {
     }
 
     const totalEmails = emailsData.pagination?.total || emails.length;
-    const phishingCount = emails.filter(email =>
-      mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") === "phishing"
+    const phishingCount = emails.filter(
+      (email) =>
+        mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") ===
+        "phishing"
     ).length;
-    const legitimateCount = emails.filter(email =>
-      mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") === "legitimate"
+    const legitimateCount = emails.filter(
+      (email) =>
+        mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") ===
+        "legitimate"
     ).length;
 
-    const averageRiskScore = emails.length > 0
-      ? emails.reduce((sum, email) => sum + email.phishing_score_cti, 0) / emails.length
-      : 0;
+    const averageRiskScore =
+      emails.length > 0
+        ? emails.reduce((sum, email) => sum + email.phishing_score_cti, 0) /
+          emails.length
+        : 0;
 
     return {
       total_emails: totalEmails,
@@ -117,23 +133,29 @@ export function Analytics() {
 
     // Group emails by date
     const dateGroups: { [date: string]: Email[] } = {};
-    emails.forEach(email => {
-      const date = new Date(email.timestamp).toISOString().split('T')[0];
+    emails.forEach((email) => {
+      const date = new Date(email.timestamp).toISOString().split("T")[0];
       if (!dateGroups[date]) dateGroups[date] = [];
       dateGroups[date].push(email);
     });
 
     // Convert to trend data
-    let trends = Object.entries(dateGroups)
+    const trends = Object.entries(dateGroups)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, dayEmails]) => {
-        const threatsDetected = dayEmails.filter(email =>
-          mapRiskLevel(email.threat_summary?.overall_risk || "clean") === "malicious"
+        const threatsDetected = dayEmails.filter(
+          (email) =>
+            mapRiskLevel(email.threat_summary?.overall_risk || "clean") ===
+            "malicious"
         ).length;
 
-        const averageRisk = dayEmails.length > 0
-          ? dayEmails.reduce((sum, email) => sum + email.phishing_score_cti, 0) / dayEmails.length
-          : 0;
+        const averageRisk =
+          dayEmails.length > 0
+            ? dayEmails.reduce(
+                (sum, email) => sum + email.phishing_score_cti,
+                0
+              ) / dayEmails.length
+            : 0;
 
         return {
           date,
@@ -145,11 +167,16 @@ export function Analytics() {
         };
       });
 
-    console.log("Trends date range:", trends.length > 0 ? {
-      first: trends[0].date,
-      last: trends[trends.length - 1].date,
-      allDates: trends.map(t => t.date)
-    } : "no trends");
+    console.log(
+      "Trends date range:",
+      trends.length > 0
+        ? {
+            first: trends[0].date,
+            last: trends[trends.length - 1].date,
+            allDates: trends.map((t) => t.date),
+          }
+        : "no trends"
+    );
 
     // Remove period filtering from here - let ThreatTrendAnalysis handle it
     // so the chart updates immediately when period changes
@@ -163,7 +190,7 @@ export function Analytics() {
 
     // Group emails by sender domain
     const domainGroups: { [domain: string]: Email[] } = {};
-    emails.forEach(email => {
+    emails.forEach((email) => {
       const domain = email.sender_domain || "unknown";
       if (!domainGroups[domain]) domainGroups[domain] = [];
       domainGroups[domain].push(email);
@@ -173,31 +200,48 @@ export function Analytics() {
     return Object.entries(domainGroups).map(([domain, domainEmails]) => {
       // Get domain analysis data from the most recent email that has it
       const domainAnalysis = domainEmails
-        .filter(email => email.detailed_analysis?.domains?.[domain])
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0]
-        ?.detailed_analysis?.domains?.[domain];
+        .filter((email) => email.detailed_analysis?.domains?.[domain])
+        .sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        )[0]?.detailed_analysis?.domains?.[domain];
 
       // Use domain analysis data if available, otherwise calculate from email threat levels
       const maliciousEnginesCount = domainAnalysis?.stats?.malicious || 0;
-      const totalEngines = domainAnalysis?.stats ?
-        (domainAnalysis.stats.malicious + domainAnalysis.stats.suspicious + domainAnalysis.stats.harmless + domainAnalysis.stats.undetected) :
-        60; // fallback
+      const totalEngines = domainAnalysis?.stats
+        ? domainAnalysis.stats.malicious +
+          domainAnalysis.stats.suspicious +
+          domainAnalysis.stats.harmless +
+          domainAnalysis.stats.undetected
+        : 60; // fallback
 
       // Check if any emails from this domain are phishing (fallback logic)
-      const hasPhishingEmails = domainEmails.some(email =>
-        mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") === "phishing"
+      const hasPhishingEmails = domainEmails.some(
+        (email) =>
+          mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") ===
+          "phishing"
       );
 
       // Calculate reputation score - use domain analysis if available
-      const reputationScore = domainAnalysis?.reputation_score ??
-        Math.max(0, Math.round(100 - (maliciousEnginesCount / Math.max(totalEngines, 1)) * 100));
+      const reputationScore =
+        domainAnalysis?.reputation_score ??
+        Math.max(
+          0,
+          Math.round(
+            100 - (maliciousEnginesCount / Math.max(totalEngines, 1)) * 100
+          )
+        );
 
       // Get threat level from domain analysis or fallback to email-based logic (only two levels: legitimate or phishing)
       let threatLevel: "legitimate" | "phishing" = "legitimate";
       if (domainAnalysis?.threat_level) {
         // Map domain threat level to our categories
         const domainRisk = domainAnalysis.threat_level;
-        if (domainRisk === "high" || domainRisk === "critical" || domainRisk === "medium") {
+        if (
+          domainRisk === "high" ||
+          domainRisk === "critical" ||
+          domainRisk === "medium"
+        ) {
           threatLevel = "phishing";
         }
       } else if (hasPhishingEmails || reputationScore < 70) {
@@ -205,7 +249,9 @@ export function Analytics() {
       }
 
       // Get date range for this domain
-      const timestamps = domainEmails.map(email => new Date(email.timestamp).getTime());
+      const timestamps = domainEmails.map((email) =>
+        new Date(email.timestamp).getTime()
+      );
       const firstSeen = new Date(Math.min(...timestamps)).toISOString();
       const lastSeen = new Date(Math.max(...timestamps)).toISOString();
 
@@ -216,7 +262,10 @@ export function Analytics() {
         first_seen: firstSeen,
         last_seen: lastSeen,
         email_count: domainEmails.length,
-        malicious_engines: Array.from({ length: maliciousEnginesCount }, (_, i) => `engine_${i + 1}`),
+        malicious_engines: Array.from(
+          { length: maliciousEnginesCount },
+          (_, i) => `engine_${i + 1}`
+        ),
         total_engines: totalEngines,
         categories: domainAnalysis?.categories || [],
         geographic_distribution: [], // Not available in current data
@@ -231,7 +280,7 @@ export function Analytics() {
     // Collect all unique IPs from all emails
     const allIPs = new Set<string>();
 
-    emails.forEach(email => {
+    emails.forEach((email) => {
       // Add sender IP
       if (email.sender_ip) {
         allIPs.add(email.sender_ip);
@@ -239,20 +288,24 @@ export function Analytics() {
 
       // Add IPs from detailed analysis
       if (email.detailed_analysis?.ips) {
-        Object.keys(email.detailed_analysis.ips).forEach(ip => allIPs.add(ip));
+        Object.keys(email.detailed_analysis.ips).forEach((ip) =>
+          allIPs.add(ip)
+        );
       }
     });
 
     // For each unique IP, collect all associated emails
     const ipToEmailsMap: { [ip: string]: Email[] } = {};
 
-    Array.from(allIPs).forEach(ip => {
-      ipToEmailsMap[ip] = emails.filter(email => {
+    Array.from(allIPs).forEach((ip) => {
+      ipToEmailsMap[ip] = emails.filter((email) => {
         // Email is associated with this IP if:
         // 1. It's the sender IP, or
         // 2. The IP appears in the detailed analysis
-        return email.sender_ip === ip ||
-               (email.detailed_analysis?.ips && email.detailed_analysis.ips[ip]);
+        return (
+          email.sender_ip === ip ||
+          (email.detailed_analysis?.ips && email.detailed_analysis.ips[ip])
+        );
       });
     });
 
@@ -260,24 +313,37 @@ export function Analytics() {
     return Object.entries(ipToEmailsMap).map(([ip, ipEmails]) => {
       // Get IP analysis data from the most recent email that has it
       const ipAnalysis = ipEmails
-        .filter(email => email.detailed_analysis?.ips?.[ip])
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0]
-        ?.detailed_analysis?.ips?.[ip];
+        .filter((email) => email.detailed_analysis?.ips?.[ip])
+        .sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        )[0]?.detailed_analysis?.ips?.[ip];
 
       // Use IP analysis data if available, otherwise calculate from email threat levels
       const maliciousEnginesCount = ipAnalysis?.stats?.malicious || 0;
-      const totalEngines = ipAnalysis?.stats ?
-        (ipAnalysis.stats.malicious + ipAnalysis.stats.suspicious + ipAnalysis.stats.harmless + ipAnalysis.stats.undetected) :
-        60; // fallback
+      const totalEngines = ipAnalysis?.stats
+        ? ipAnalysis.stats.malicious +
+          ipAnalysis.stats.suspicious +
+          ipAnalysis.stats.harmless +
+          ipAnalysis.stats.undetected
+        : 60; // fallback
 
       // Check if any emails associated with this IP are phishing
-      const hasPhishingEmails = ipEmails.some(email =>
-        mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") === "phishing"
+      const hasPhishingEmails = ipEmails.some(
+        (email) =>
+          mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") ===
+          "phishing"
       );
 
       // Calculate reputation score - use IP analysis if available
-      const reputationScore = ipAnalysis?.reputation_score ??
-        Math.max(0, Math.round(100 - (maliciousEnginesCount / Math.max(totalEngines, 1)) * 100));
+      const reputationScore =
+        ipAnalysis?.reputation_score ??
+        Math.max(
+          0,
+          Math.round(
+            100 - (maliciousEnginesCount / Math.max(totalEngines, 1)) * 100
+          )
+        );
 
       // Get threat level from IP analysis or fallback to email-based logic (only two levels: legitimate or phishing)
       let threatLevel: "legitimate" | "phishing" = "legitimate";
@@ -292,7 +358,9 @@ export function Analytics() {
       }
 
       // Get date range for this IP across all associated emails
-      const timestamps = ipEmails.map(email => new Date(email.timestamp).getTime());
+      const timestamps = ipEmails.map((email) =>
+        new Date(email.timestamp).getTime()
+      );
       const firstSeen = new Date(Math.min(...timestamps)).toISOString();
       const lastSeen = new Date(Math.max(...timestamps)).toISOString();
 
@@ -303,11 +371,16 @@ export function Analytics() {
         first_seen: firstSeen,
         last_seen: lastSeen,
         email_count: ipEmails.length,
-        malicious_engines: Array.from({ length: maliciousEnginesCount }, (_, i) => `engine_${i + 1}`),
+        malicious_engines: Array.from(
+          { length: maliciousEnginesCount },
+          (_, i) => `engine_${i + 1}`
+        ),
         total_engines: totalEngines,
         categories: ipAnalysis?.categories || [],
         geographic_distribution: [], // Not available in current data
-        asn: ipAnalysis?.popularity_ranks ? Object.keys(ipAnalysis.popularity_ranks)[0] : undefined,
+        asn: ipAnalysis?.popularity_ranks
+          ? Object.keys(ipAnalysis.popularity_ranks)[0]
+          : undefined,
         isp: undefined, // Not available in current data
       };
     });
@@ -316,10 +389,15 @@ export function Analytics() {
   const refetch = async () => {
     try {
       setLoading(true);
-      const response = await dataFetch<EmailsApiResponse>('/emails/all?limit=1000', 'GET');
+      const response = await dataFetch<EmailsApiResponse>(
+        "/emails/all?limit=1000",
+        "GET"
+      );
       setEmailsData(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch analytics data');
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch analytics data"
+      );
     } finally {
       setLoading(false);
     }
@@ -341,7 +419,9 @@ export function Analytics() {
       <div className="min-h-screen">
         <div className="flex flex-col items-center justify-center min-h-[300px] gap-6 text-center">
           <BarChart3 size={48} className="text-red-500" />
-          <h2 className="text-xl font-semibold text-white">Failed to Load Analytics</h2>
+          <h2 className="text-xl font-semibold text-white">
+            Failed to Load Analytics
+          </h2>
           <p className="text-gray-400">{error}</p>
           <button
             className="px-6 py-2 bg-green-400 text-black border-none rounded-md text-sm font-medium cursor-pointer hover:bg-green-300 transition-colors"
@@ -357,103 +437,108 @@ export function Analytics() {
   return (
     <div className="min-h-screen w-full overflow-x-hidden box-border">
       <div className="w-full max-w-full">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-6 border-b border-gray-700 mb-6 lg:mb-8">
-        <div className="flex items-center gap-4">
-          <BarChart3 className="text-green-400 shrink-0" size={28} />
-          <div>
-            <h1 className="m-0 mb-1 text-2xl lg:text-3xl font-bold text-white">Analytics Dashboard</h1>
-            <p className="m-0 text-gray-400 text-sm">
-              Comprehensive threat intelligence and security analytics
-            </p>
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-6 border-b border-gray-700 mb-6 lg:mb-8">
+          <div className="flex items-center gap-4">
+            <BarChart3 className="text-green-400 shrink-0" size={28} />
+            <div>
+              <h1 className="m-0 mb-1 text-2xl lg:text-3xl font-bold text-white">
+                Analytics Dashboard
+              </h1>
+              <p className="m-0 text-gray-400 text-sm">
+                Comprehensive threat intelligence and security analytics
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 shrink-0">
+            <button
+              className="px-4 lg:px-6 py-2 bg-green-400 text-black border-none rounded-md text-sm font-medium cursor-pointer hover:bg-green-300 transition-colors"
+              onClick={refetch}
+            >
+              <RefreshCw size={18} />
+              Refresh
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 shrink-0">
-          <button
-            className="px-4 lg:px-6 py-2 bg-green-400 text-black border-none rounded-md text-sm font-medium cursor-pointer hover:bg-green-300 transition-colors"
-            onClick={refetch}
-          >
-            <RefreshCw size={18} />
-            Refresh
-          </button>
-        </div>
-      </div>
+        {/* Analytics Overview Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 lg:mb-8">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4 lg:p-6">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">
+              {threatMetrics.total_emails}
+            </div>
+            <div className="text-sm font-medium text-gray-400 mb-2">
+              Total Emails
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-500">●</span>
+              <span className="text-xs text-gray-500">Analyzed</span>
+            </div>
+          </div>
 
-      {/* Analytics Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 lg:mb-8">
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4 lg:p-6">
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">{threatMetrics.total_emails}</div>
-          <div className="text-sm font-medium text-gray-400 mb-2">Total Emails</div>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500">●</span>
-            <span className="text-xs text-gray-500">Analyzed</span>
+          <div className="bg-red-900/20 border border-red-500 rounded-lg p-3 sm:p-4 lg:p-6">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">
+              {threatMetrics.malicious_count}
+            </div>
+            <div className="text-sm font-medium text-gray-400 mb-2">
+              Phishing
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-red-400">●</span>
+              <span className="text-xs text-gray-500">Threats Detected</span>
+            </div>
+          </div>
+
+          <div className="bg-green-900/20 border border-green-500 rounded-lg p-3 sm:p-4 lg:p-6">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">
+              {threatMetrics.clean_count}
+            </div>
+            <div className="text-sm font-medium text-gray-400 mb-2">
+              Legitimate
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-green-400">●</span>
+              <span className="text-xs text-gray-500">Safe Emails</span>
+            </div>
           </div>
         </div>
 
-        <div className="bg-red-900/20 border border-red-500 rounded-lg p-3 sm:p-4 lg:p-6">
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">{threatMetrics.malicious_count}</div>
-          <div className="text-sm font-medium text-gray-400 mb-2">Phishing</div>
-          <div className="flex items-center gap-2">
-            <span className="text-red-400">●</span>
-            <span className="text-xs text-gray-500">Threats Detected</span>
+        {/* Analytics Components */}
+        <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+          {/* Threat Intelligence Chart */}
+          <div className="w-full">
+            <ThreatIntelligenceChart data={threatMetrics} loading={loading} />
+          </div>
+
+          {/* Threat Trend Analysis */}
+          <div className="w-full">
+            <ThreatTrendAnalysis
+              data={threatTrends}
+              loading={loading}
+              onPeriodChange={setSelectedPeriod}
+              selectedPeriod={selectedPeriod}
+            />
+          </div>
+          {/* Email Intelligence Table */}
+          <div className="w-full">
+            <EmailIntelligenceTable loading={loading} />
+          </div>
+
+          {/* Domain Intelligence Table */}
+          <div className="w-full">
+            <DomainIntelligenceTable
+              data={domainIntelligence}
+              loading={loading}
+            />
+          </div>
+
+          {/* IP Intelligence Table */}
+          <div className="w-full">
+            <IPIntelligenceTable data={ipIntelligence} loading={loading} />
           </div>
         </div>
-
-        <div className="bg-green-900/20 border border-green-500 rounded-lg p-3 sm:p-4 lg:p-6">
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">{threatMetrics.clean_count}</div>
-          <div className="text-sm font-medium text-gray-400 mb-2">Legitimate</div>
-          <div className="flex items-center gap-2">
-            <span className="text-green-400">●</span>
-            <span className="text-xs text-gray-500">Safe Emails</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Analytics Components */}
-      <div className="space-y-4 sm:space-y-6 lg:space-y-8">
-        {/* Threat Intelligence Chart */}
-        <div className="w-full">
-          <ThreatIntelligenceChart
-            data={threatMetrics}
-            loading={loading}
-          />
-        </div>
-
-        {/* Threat Trend Analysis */}
-        <div className="w-full">
-          <ThreatTrendAnalysis
-            data={threatTrends}
-            loading={loading}
-            onPeriodChange={setSelectedPeriod}
-            selectedPeriod={selectedPeriod}
-          />
-        </div>
-        {/* Email Intelligence Table */}
-        <div className="w-full">
-          <EmailIntelligenceTable
-            loading={loading}
-          />
-        </div>
-
-        {/* Domain Intelligence Table */}
-        <div className="w-full">
-          <DomainIntelligenceTable
-            data={domainIntelligence}
-            loading={loading}
-          />
-        </div>
-
-        {/* IP Intelligence Table */}
-        <div className="w-full">
-          <IPIntelligenceTable
-            data={ipIntelligence}
-            loading={loading}
-          />
-        </div>
-
       </div>
     </div>
-  </div>
-);
+  );
 }
