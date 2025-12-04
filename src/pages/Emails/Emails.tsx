@@ -7,7 +7,6 @@ import { EmailDetailModal } from "../../components/emails/EmailDetailModal";
 import { EnhancedEmailFilters } from "../../components/emails/EnhancedEmailFilters";
 import { useApi } from "../../contexts/ApiContext";
 import type { Email } from "../../models/email";
-import { MOCK_EMAILS } from "../../data/mockEmails";
 
 // Define the actual API response structure
 interface EmailsApiResponse {
@@ -35,20 +34,8 @@ export function Emails() {
       try {
         setLoading(true);
 
-        // TODO: Replace with actual API call when backend is ready
-        // const response = await dataFetch<EmailsApiResponse>('/emails/all?limit=1000', 'GET');
-
-        // Using mock data for testing
-        await new Promise((resolve) => setTimeout(resolve, 800)); // Simulate loading
-        const response: EmailsApiResponse = {
-          emails: MOCK_EMAILS,
-          pagination: {
-            total: MOCK_EMAILS.length,
-            limit: 1000,
-            offset: 0,
-            hasMore: false,
-          },
-        };
+        // Fetch all emails from the API
+        const response = await dataFetch<EmailsApiResponse>('/emails/all?limit=1000', 'GET');
 
         console.log(
           "Emails page fetched all emails:",
@@ -74,17 +61,17 @@ export function Emails() {
 
   const mapRiskLevel = (risk: string) => {
     switch (risk?.toLowerCase()) {
-      case "critical":
+      case "phishing":
       case "malicious":
+      case "critical":
       case "high":
-        return "malicious";
-      case "suspicious":
-      case "medium":
-        return "suspicious";
+        return "phishing";
+      case "legitimate":
       case "clean":
+      case "safe":
       case "low":
       default:
-        return "clean";
+        return "legitimate";
     }
   };
 
@@ -127,12 +114,14 @@ export function Emails() {
       // Phishing score range filter
       if (
         filters?.score_min !== undefined &&
+        email.phishing_score_cti !== null &&
         email.phishing_score_cti < filters.score_min
       ) {
         return false;
       }
       if (
         filters?.score_max !== undefined &&
+        email.phishing_score_cti !== null &&
         email.phishing_score_cti > filters.score_max
       ) {
         return false;
@@ -212,48 +201,8 @@ export function Emails() {
     try {
       setLoading(true);
 
-      // TODO: Replace with actual API call when backend is ready
-      /*
-      // Build query parameters for pagination and filters
-      const params = new URLSearchParams();
-      params.append('limit', pageSize.toString());
-      params.append('offset', ((currentPage - 1) * pageSize).toString());
-
-      // Add filters if they exist - map to API parameter names
-      if (filters) {
-        if (filters.sender) params.append('sender', filters.sender);
-        if (filters.sender_domain) params.append('sender_domain', filters.sender_domain);
-        if (filters.subject) params.append('subject', filters.subject);
-        if (filters.threat_level) params.append('threat_level', filters.threat_level);
-        if (filters.cti_confidence) params.append('cti_confidence', filters.cti_confidence);
-        if (filters.start_date) params.append('start_date', filters.start_date);
-        if (filters.end_date) params.append('end_date', filters.end_date);
-        if (filters.has_attachments !== undefined) params.append('has_attachments', filters.has_attachments.toString());
-        if (filters.has_urls !== undefined) params.append('has_urls', filters.has_urls.toString());
-      }
-
-      // Add search term if it exists
-      if (searchTerm) {
-        params.append('search', searchTerm);
-      }
-
-      const queryString = params.toString();
-      const endpoint = `/emails/all${queryString ? `?${queryString}` : ''}`;
-
-      const response = await dataFetch<EmailsApiResponse>(endpoint, 'GET');
-      */
-
-      // Using mock data for testing
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate loading
-      const response: EmailsApiResponse = {
-        emails: MOCK_EMAILS,
-        pagination: {
-          total: MOCK_EMAILS.length,
-          limit: 1000,
-          offset: 0,
-          hasMore: false,
-        },
-      };
+      // Fetch all emails from the API (in production, you may want to implement server-side filtering)
+      const response = await dataFetch<EmailsApiResponse>('/emails/all?limit=1000', 'GET');
 
       setEmailsData(response);
     } catch (err) {
@@ -388,7 +337,7 @@ export function Emails() {
   const getEmailStats = () => {
     // Always show stats for all emails (not filtered)
     if (!emailsData) {
-      return { total: 0, malicious: 0, suspicious: 0, clean: 0 };
+      return { total: 0, phishing: 0, legitimate: 0 };
     }
 
     const allEmails = emailsData.emails || [];
@@ -403,17 +352,13 @@ export function Emails() {
 
     const stats = {
       total: emailsData.pagination?.total || allEmails.length,
-      malicious: allEmails.filter((e: Email) => {
-        const risk = mapRiskLevel(e.threat_summary?.overall_risk || "clean");
-        return risk === "malicious";
+      phishing: allEmails.filter((e: Email) => {
+        const risk = mapRiskLevel(e.threat_summary?.overall_risk || "legitimate");
+        return risk === "phishing";
       }).length,
-      suspicious: allEmails.filter((e: Email) => {
-        const risk = mapRiskLevel(e.threat_summary?.overall_risk || "clean");
-        return risk === "suspicious";
-      }).length,
-      clean: allEmails.filter((e: Email) => {
-        const risk = mapRiskLevel(e.threat_summary?.overall_risk || "clean");
-        return risk === "clean";
+      legitimate: allEmails.filter((e: Email) => {
+        const risk = mapRiskLevel(e.threat_summary?.overall_risk || "legitimate");
+        return risk === "legitimate";
       }).length,
     };
 
@@ -544,37 +489,24 @@ export function Emails() {
 
         <div className="bg-red-900/20 border border-red-500 rounded-lg p-6">
           <div className="text-3xl font-bold text-white mb-2">
-            {stats.malicious}
+            {stats.phishing}
           </div>
           <div className="text-sm font-medium text-gray-400 mb-2">
-            Malicious Threats
+            Phishing
           </div>
           <div className="flex items-center gap-2">
             <span className="text-red-400">▲</span>
             <span className="text-xs text-gray-500">
-              Immediate action required
+              Threats detected
             </span>
           </div>
         </div>
 
-        <div className="bg-yellow-900/20 border border-yellow-500 rounded-lg p-6">
+        <div className="bg-green-900/20 border border-green-500 rounded-lg p-6">
           <div className="text-3xl font-bold text-white mb-2">
-            {stats.suspicious}
+            {stats.legitimate}
           </div>
-          <div className="text-sm font-medium text-gray-400 mb-2">
-            Suspicious
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-yellow-400">▲</span>
-            <span className="text-xs text-gray-500">Under investigation</span>
-          </div>
-        </div>
-
-        <div className="bg-green-900/20 border border-green-500 rounded-lg p-6 md:col-span-3">
-          <div className="text-3xl font-bold text-white mb-2">
-            {stats.clean}
-          </div>
-          <div className="text-sm font-medium text-gray-400 mb-2">Clean</div>
+          <div className="text-sm font-medium text-gray-400 mb-2">Legitimate</div>
           <div className="flex items-center gap-2">
             <span className="text-green-400">▼</span>
             <span className="text-xs text-gray-500">Safe emails</span>

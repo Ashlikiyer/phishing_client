@@ -12,9 +12,11 @@ import {
   User,
   CheckCircle,
 } from "lucide-react";
+import { useApi } from "../../contexts/ApiContext";
 
 export function Register() {
   const navigate = useNavigate();
+  const { dataFetch } = useApi();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -84,15 +86,45 @@ export function Register() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Store auth token (simplified for demo)
+    try {
+      // Call the register API
+      const data = await dataFetch<{ token: string; user?: { id?: string } }>(
+        'auth/register',
+        'POST',
+        {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password,
+          role: 'admin', // Default role to admin
+        }
+      );
+
+      // Store auth token in cookies (expires in 7 days)
+      const expires = new Date();
+      expires.setDate(expires.getDate() + 7);
+      document.cookie = `authToken=${data.token}; expires=${expires.toUTCString()}; path=/; SameSite=Strict`;
+      
+      // Store user info in localStorage
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("userEmail", formData.email);
       localStorage.setItem("username", formData.username);
+      if (data.user) {
+        localStorage.setItem("userId", data.user.id || '');
+      }
+      
       navigate("/dashboard");
-    }, 2000);
+    } catch (error) {
+      setIsLoading(false);
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+      // Show error in the most relevant field
+      if (errorMessage.toLowerCase().includes('email')) {
+        setErrors({ email: errorMessage });
+      } else if (errorMessage.toLowerCase().includes('username')) {
+        setErrors({ username: errorMessage });
+      } else {
+        setErrors({ confirmPassword: errorMessage });
+      }
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

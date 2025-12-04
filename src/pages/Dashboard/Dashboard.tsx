@@ -52,29 +52,28 @@ export function Dashboard() {
   console.log("Dashboard: emails received", emails);
 
   const mapRiskLevel = (risk: string) => {
-    switch (risk) {
-      case "low":
-      case "clean":
-        return "clean";
-      case "medium":
-      case "suspicious":
-        return "suspicious";
-      case "high":
-      case "critical":
+    switch (risk?.toLowerCase()) {
+      case "phishing":
       case "malicious":
-        return "malicious";
+      case "critical":
+      case "high":
+        return "phishing";
+      case "legitimate":
+      case "clean":
+      case "safe":
+      case "low":
       default:
-        return "clean"; // default to clean
+        return "legitimate"; // default to legitimate
     }
   };
 
   // Calculate KPI values from emails
   const totalEmails = emailsData?.pagination?.total || emails.length;
-  const highRiskEmails =
+  const phishingEmails =
     emails.filter(
       (email: any) =>
-        mapRiskLevel(email.threat_summary?.overall_risk || "low") ===
-        "malicious"
+        mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") ===
+        "phishing"
     ).length || 0;
 
   const avgPhishingScore =
@@ -93,8 +92,8 @@ export function Dashboard() {
   console.log(
     "Dashboard: totalEmails",
     totalEmails,
-    "highRiskEmails",
-    highRiskEmails,
+    "phishingEmails",
+    phishingEmails,
     "avgPhishingScore",
     avgPhishingScore,
     "activeThreats",
@@ -108,28 +107,22 @@ export function Dashboard() {
     const distribution = emails.reduce((acc: Record<string, number>, email: any) => {
       const risk = email.threat_summary
         ? mapRiskLevel(email.threat_summary.overall_risk)
-        : "clean";
+        : "legitimate";
       acc[risk] = (acc[risk] || 0) + 1;
       return acc;
     }, {});
 
     return [
       {
-        name: "Clean",
-        value: distribution.clean || 0,
-        level: "clean" as const,
+        name: "Legitimate",
+        value: distribution.legitimate || 0,
+        level: "legitimate" as const,
         color: "#0DBB64",
       },
       {
-        name: "Suspicious",
-        value: distribution.suspicious || 0,
-        level: "suspicious" as const,
-        color: "#13FFA0",
-      },
-      {
-        name: "Malicious",
-        value: distribution.malicious || 0,
-        level: "malicious" as const,
+        name: "Phishing",
+        value: distribution.phishing || 0,
+        level: "phishing" as const,
         color: "#ED3333",
       },
     ].filter((item) => item.value > 0);
@@ -156,14 +149,11 @@ export function Dashboard() {
         return emailDate >= date && emailDate < nextDay;
       });
 
-      const clean = dayEmails.filter(
-        (e: any) => mapRiskLevel(e.threat_summary.overall_risk) === "clean"
+      const legitimate = dayEmails.filter(
+        (e: any) => mapRiskLevel(e.threat_summary?.overall_risk) === "legitimate"
       ).length;
-      const suspicious = dayEmails.filter(
-        (e: any) => mapRiskLevel(e.threat_summary.overall_risk) === "suspicious"
-      ).length;
-      const malicious = dayEmails.filter(
-        (e: any) => mapRiskLevel(e.threat_summary.overall_risk) === "malicious"
+      const phishing = dayEmails.filter(
+        (e: any) => mapRiskLevel(e.threat_summary?.overall_risk) === "phishing"
       ).length;
 
       return {
@@ -171,10 +161,9 @@ export function Dashboard() {
           month: "short",
           day: "2-digit",
         }),
-        clean,
-        suspicious,
-        malicious,
-        total: clean + suspicious + malicious,
+        legitimate,
+        phishing,
+        total: legitimate + phishing,
       };
     });
   }, [emails]);
@@ -225,9 +214,9 @@ export function Dashboard() {
                 />
 
                 <KPICard
-                  title="High Risk"
-                  value={highRiskEmails}
-                  subtitle="Critical threats detected"
+                  title="Phishing Detected"
+                  value={phishingEmails}
+                  subtitle="Threats identified"
                   icon={<AlertTriangle size={20} />}
                   variant="danger"
                   loading={loading}

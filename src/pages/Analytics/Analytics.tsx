@@ -52,20 +52,20 @@ export function Analytics() {
   // Extract emails from response
   const emails = emailsData?.emails || [];
 
-  // Map risk level function (same as Emails page)
+  // Map risk level function - only two verdicts: legitimate or phishing
   const mapRiskLevel = (risk: string) => {
     switch (risk?.toLowerCase()) {
-      case "critical":
+      case "phishing":
       case "malicious":
+      case "critical":
       case "high":
-        return "malicious";
-      case "suspicious":
-      case "medium":
-        return "suspicious";
+        return "phishing";
+      case "legitimate":
       case "clean":
+      case "safe":
       case "low":
       default:
-        return "clean";
+        return "legitimate";
     }
   };
 
@@ -86,14 +86,11 @@ export function Analytics() {
     }
 
     const totalEmails = emailsData.pagination?.total || emails.length;
-    const maliciousCount = emails.filter(email =>
-      mapRiskLevel(email.threat_summary?.overall_risk || "clean") === "malicious"
+    const phishingCount = emails.filter(email =>
+      mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") === "phishing"
     ).length;
-    const suspiciousCount = emails.filter(email =>
-      mapRiskLevel(email.threat_summary?.overall_risk || "clean") === "suspicious"
-    ).length;
-    const cleanCount = emails.filter(email =>
-      mapRiskLevel(email.threat_summary?.overall_risk || "clean") === "clean"
+    const legitimateCount = emails.filter(email =>
+      mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") === "legitimate"
     ).length;
 
     const averageRiskScore = emails.length > 0
@@ -102,13 +99,13 @@ export function Analytics() {
 
     return {
       total_emails: totalEmails,
-      high_risk_emails: maliciousCount,
-      malicious_count: maliciousCount,
-      suspicious_count: suspiciousCount,
-      clean_count: cleanCount,
+      high_risk_emails: phishingCount,
+      malicious_count: phishingCount,
+      suspicious_count: 0, // Not used - only two verdicts
+      clean_count: legitimateCount,
       blocked_count: 0, // Not available in current data
       average_risk_score: averageRiskScore,
-      detection_rate: totalEmails > 0 ? (maliciousCount / totalEmails) * 100 : 0,
+      detection_rate: totalEmails > 0 ? (phishingCount / totalEmails) * 100 : 0,
       false_positive_rate: 0, // Not available in current data
     };
   }, [emailsData, emails]);
@@ -186,29 +183,25 @@ export function Analytics() {
         (domainAnalysis.stats.malicious + domainAnalysis.stats.suspicious + domainAnalysis.stats.harmless + domainAnalysis.stats.undetected) :
         60; // fallback
 
-      // Check if any emails from this domain are malicious (fallback logic)
-      const hasMaliciousEmails = domainEmails.some(email =>
-        mapRiskLevel(email.threat_summary?.overall_risk || "clean") === "malicious"
+      // Check if any emails from this domain are phishing (fallback logic)
+      const hasPhishingEmails = domainEmails.some(email =>
+        mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") === "phishing"
       );
 
       // Calculate reputation score - use domain analysis if available
       const reputationScore = domainAnalysis?.reputation_score ??
         Math.max(0, Math.round(100 - (maliciousEnginesCount / Math.max(totalEngines, 1)) * 100));
 
-      // Get threat level from domain analysis or fallback to email-based logic
-      let threatLevel: "clean" | "suspicious" | "malicious" = "clean";
+      // Get threat level from domain analysis or fallback to email-based logic (only two levels: legitimate or phishing)
+      let threatLevel: "legitimate" | "phishing" = "legitimate";
       if (domainAnalysis?.threat_level) {
         // Map domain threat level to our categories
         const domainRisk = domainAnalysis.threat_level;
-        if (domainRisk === "high" || domainRisk === "critical") {
-          threatLevel = "malicious";
-        } else if (domainRisk === "medium") {
-          threatLevel = "suspicious";
+        if (domainRisk === "high" || domainRisk === "critical" || domainRisk === "medium") {
+          threatLevel = "phishing";
         }
-      } else if (hasMaliciousEmails) {
-        threatLevel = "malicious";
-      } else if (reputationScore < 70) {
-        threatLevel = "suspicious";
+      } else if (hasPhishingEmails || reputationScore < 70) {
+        threatLevel = "phishing";
       }
 
       // Get date range for this domain
@@ -277,29 +270,25 @@ export function Analytics() {
         (ipAnalysis.stats.malicious + ipAnalysis.stats.suspicious + ipAnalysis.stats.harmless + ipAnalysis.stats.undetected) :
         60; // fallback
 
-      // Check if any emails associated with this IP are malicious
-      const hasMaliciousEmails = ipEmails.some(email =>
-        mapRiskLevel(email.threat_summary?.overall_risk || "clean") === "malicious"
+      // Check if any emails associated with this IP are phishing
+      const hasPhishingEmails = ipEmails.some(email =>
+        mapRiskLevel(email.threat_summary?.overall_risk || "legitimate") === "phishing"
       );
 
       // Calculate reputation score - use IP analysis if available
       const reputationScore = ipAnalysis?.reputation_score ??
         Math.max(0, Math.round(100 - (maliciousEnginesCount / Math.max(totalEngines, 1)) * 100));
 
-      // Get threat level from IP analysis or fallback to email-based logic
-      let threatLevel: "clean" | "suspicious" | "malicious" = "clean";
+      // Get threat level from IP analysis or fallback to email-based logic (only two levels: legitimate or phishing)
+      let threatLevel: "legitimate" | "phishing" = "legitimate";
       if (ipAnalysis?.threat_level) {
         // Map IP threat level to our categories
         const ipRisk = ipAnalysis.threat_level;
-        if (ipRisk === "high" || ipRisk === "critical") {
-          threatLevel = "malicious";
-        } else if (ipRisk === "medium") {
-          threatLevel = "suspicious";
+        if (ipRisk === "high" || ipRisk === "critical" || ipRisk === "medium") {
+          threatLevel = "phishing";
         }
-      } else if (hasMaliciousEmails) {
-        threatLevel = "malicious";
-      } else if (reputationScore < 70) {
-        threatLevel = "suspicious";
+      } else if (hasPhishingEmails || reputationScore < 70) {
+        threatLevel = "phishing";
       }
 
       // Get date range for this IP across all associated emails
@@ -392,7 +381,7 @@ export function Analytics() {
       </div>
 
       {/* Analytics Overview Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 lg:mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 lg:mb-8">
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 sm:p-4 lg:p-6">
           <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">{threatMetrics.total_emails}</div>
           <div className="text-sm font-medium text-gray-400 mb-2">Total Emails</div>
@@ -404,28 +393,19 @@ export function Analytics() {
 
         <div className="bg-red-900/20 border border-red-500 rounded-lg p-3 sm:p-4 lg:p-6">
           <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">{threatMetrics.malicious_count}</div>
-          <div className="text-sm font-medium text-gray-400 mb-2">Malicious</div>
+          <div className="text-sm font-medium text-gray-400 mb-2">Phishing</div>
           <div className="flex items-center gap-2">
             <span className="text-red-400">●</span>
-            <span className="text-xs text-gray-500">High Risk</span>
-          </div>
-        </div>
-
-        <div className="bg-yellow-900/20 border border-yellow-500 rounded-lg p-3 sm:p-4 lg:p-6">
-          <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">{threatMetrics.suspicious_count}</div>
-          <div className="text-sm font-medium text-gray-400 mb-2">Suspicious</div>
-          <div className="flex items-center gap-2">
-            <span className="text-yellow-400">●</span>
-            <span className="text-xs text-gray-500">Medium Risk</span>
+            <span className="text-xs text-gray-500">Threats Detected</span>
           </div>
         </div>
 
         <div className="bg-green-900/20 border border-green-500 rounded-lg p-3 sm:p-4 lg:p-6">
           <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">{threatMetrics.clean_count}</div>
-          <div className="text-sm font-medium text-gray-400 mb-2">Clean</div>
+          <div className="text-sm font-medium text-gray-400 mb-2">Legitimate</div>
           <div className="flex items-center gap-2">
             <span className="text-green-400">●</span>
-            <span className="text-xs text-gray-500">Safe</span>
+            <span className="text-xs text-gray-500">Safe Emails</span>
           </div>
         </div>
       </div>

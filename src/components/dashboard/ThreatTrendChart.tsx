@@ -12,9 +12,8 @@ import {
 
 interface TrendDataPoint {
   date: string;
-  clean: number;
-  suspicious: number;
-  malicious: number;
+  legitimate: number;
+  phishing: number;
   total: number;
 }
 
@@ -86,15 +85,11 @@ export function ThreatTrendChart({
         <div className="flex gap-4">
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <div className="w-3 h-3 bg-green-500 rounded"></div>
-            <span>Clean</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <div className="w-3 h-3 bg-yellow-400 rounded"></div>
-            <span>Suspicious</span>
+            <span>Legitimate</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <div className="w-3 h-3 bg-red-500 rounded"></div>
-            <span>Malicious</span>
+            <span>Phishing</span>
           </div>
         </div>
       </div>
@@ -106,22 +101,12 @@ export function ThreatTrendChart({
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
             <defs>
-              <linearGradient id="cleanGradient" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="legitimateGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#0DBB64" stopOpacity={0.3} />
                 <stop offset="95%" stopColor="#0DBB64" stopOpacity={0.1} />
               </linearGradient>
               <linearGradient
-                id="suspiciousGradient"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
-                <stop offset="5%" stopColor="#B8E96B" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#B8E96B" stopOpacity={0.1} />
-              </linearGradient>
-              <linearGradient
-                id="maliciousGradient"
+                id="phishingGradient"
                 x1="0"
                 y1="0"
                 x2="0"
@@ -150,30 +135,19 @@ export function ThreatTrendChart({
 
             <Area
               type="monotone"
-              dataKey="clean"
-              stackId="1"
+              dataKey="legitimate"
               stroke="#0DBB64"
-              fill="url(#cleanGradient)"
+              fill="url(#legitimateGradient)"
               strokeWidth={2}
-              name="Clean"
+              name="Legitimate"
             />
             <Area
               type="monotone"
-              dataKey="suspicious"
-              stackId="1"
-              stroke="#B8E96B"
-              fill="url(#suspiciousGradient)"
-              strokeWidth={2}
-              name="Suspicious"
-            />
-            <Area
-              type="monotone"
-              dataKey="malicious"
-              stackId="1"
+              dataKey="phishing"
               stroke="#ED3333"
-              fill="url(#maliciousGradient)"
+              fill="url(#phishingGradient)"
               strokeWidth={2}
-              name="Malicious"
+              name="Phishing"
             />
           </AreaChart>
         </ResponsiveContainer>

@@ -137,7 +137,7 @@ export interface Email {
   detailed_analysis: DetailedAnalysis;
   threat_summary: ThreatSummary;
   // New AI Analysis fields
-  ai_verdict?: "legitimate" | "phishing" | "spam" | "suspicious" | "unknown";
+  ai_verdict?: "legitimate" | "phishing" 
   ai_reasoning?: string;
   cti_confidence?: "low" | "medium" | "high" | "unknown";
 }

@@ -1,5 +1,3 @@
-// Email Detail Modal - Comprehensive view of email with threat analysis
-
 import {
   X,
   Mail,
@@ -76,43 +74,19 @@ export function EmailDetailModal({ email, onClose }: EmailDetailModalProps) {
                 <span
                   className="threat-stat__value"
                   style={{
-                    color: getRiskColor(email.threat_summary.overall_risk),
+                    color: getRiskColor(email.threat_summary?.overall_risk),
                   }}
                 >
-                  {email.threat_summary.overall_risk.toUpperCase()}
-                </span>
-              </div>
-              <div className="threat-stat">
-                <span className="threat-stat__label">Confidence</span>
-                <span className="threat-stat__value">
-                  {email.threat_summary.confidence}
+                  {email.threat_summary?.overall_risk?.toUpperCase() || 'N/A'}
                 </span>
               </div>
               <div className="threat-stat">
                 <span className="threat-stat__label">Phishing Score</span>
                 <span className="threat-stat__value">
-                  {Math.round(email.phishing_score_cti * 100)}%
+                  {email.phishing_score_cti != null ? Math.round(email.phishing_score_cti * 100) : 0}%
                 </span>
               </div>
-              <div className="threat-stat">
-                <span className="threat-stat__label">Items Analyzed</span>
-                <span className="threat-stat__value">
-                  {email.threat_summary.total_analyzed}
-                </span>
-              </div>
-              <div className="threat-stat">
-                <span className="threat-stat__label">Malicious Found</span>
-                <span className="threat-stat__value threat-stat__value--danger">
-                  {email.threat_summary.malicious_found}
-                </span>
-              </div>
-              <div className="threat-stat">
-                <span className="threat-stat__label">Suspicious Found</span>
-                <span className="threat-stat__value threat-stat__value--warning">
-                  {email.threat_summary.suspicious_found}
-                </span>
-              </div>
-            </div>
+            </div>  
           </div>
 
           {/* AI Analysis Section */}
@@ -130,16 +104,6 @@ export function EmailDetailModal({ email, onClose }: EmailDetailModalProps) {
                       className={`ai-verdict-badge ai-verdict-badge--${email.ai_verdict}`}
                     >
                       {email.ai_verdict.toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="ai-verdict-item">
-                    <span className="ai-label">CTI Confidence</span>
-                    <span
-                      className={`ai-confidence-badge ai-confidence-badge--${
-                        email.cti_confidence || "unknown"
-                      }`}
-                    >
-                      {(email.cti_confidence || "unknown").toUpperCase()}
                     </span>
                   </div>
                 </div>

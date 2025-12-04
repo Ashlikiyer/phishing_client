@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, Shield, AlertCircle } from "lucide-react";
+import { useApi } from "../../contexts/ApiContext";
 
 export function Login() {
   const navigate = useNavigate();
+  const { dataFetch } = useApi();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -42,14 +44,36 @@ export function Login() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Store auth token (simplified for demo)
+    try {
+      // Call the login API
+      const data = await dataFetch<{ token: string; user?: { username?: string; id?: string } }>(
+        'auth/login',
+        'POST',
+        {
+          email: formData.email,
+          password: formData.password,
+        }
+      );
+
+      // Store auth token in cookies (expires in 7 days)
+      const expires = new Date();
+      expires.setDate(expires.getDate() + 7);
+      document.cookie = `authToken=${data.token}; expires=${expires.toUTCString()}; path=/; SameSite=Strict`;
+      
+      // Store user info in localStorage
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("userEmail", formData.email);
+      if (data.user) {
+        localStorage.setItem("username", data.user.username || '');
+        localStorage.setItem("userId", data.user.id || '');
+      }
+      
       navigate("/dashboard");
-    }, 1500);
+    } catch (error) {
+      setIsLoading(false);
+      const errorMessage = error instanceof Error ? error.message : 'Login failed. Please try again.';
+      setErrors({ password: errorMessage });
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

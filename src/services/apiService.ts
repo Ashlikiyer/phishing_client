@@ -1,14 +1,31 @@
 import axios, { type ResponseType } from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/",
+  // baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/",
+  baseURL: "https://careerapp.xyz/api/",
   // baseURL: "http://localhost:5000/api/", // if localhost
 });
+
+// Helper function to get cookie value by name
+const getCookie = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift() || null;
+  }
+  return null;
+};
 
 const getHeaders = (isFormData?: boolean) => {
   const headers: { [key: string]: string } = {};
   if (!isFormData) {
     headers["Content-Type"] = "application/json";
+  }
+
+  // Add JWT token from cookies if available
+  const token = getCookie("authToken");
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   return headers;

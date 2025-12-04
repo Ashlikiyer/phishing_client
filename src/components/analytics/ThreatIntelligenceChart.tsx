@@ -30,23 +30,15 @@ export function ThreatIntelligenceChart({
     if (!data) return [];
     return [
       {
-        name: "Malicious",
+        name: "Phishing",
         count: data.malicious_count,
         percentage: Math.round(
           (data.malicious_count / data.total_emails) * 100
         ),
-        color: "#F59E0B",
+        color: "#EF4444",
       },
       {
-        name: "Suspicious",
-        count: data.suspicious_count,
-        percentage: Math.round(
-          (data.suspicious_count / data.total_emails) * 100
-        ),
-        color: "#EAB308",
-      },
-      {
-        name: "Clean",
+        name: "Legitimate",
         count: data.clean_count,
         percentage: Math.round((data.clean_count / data.total_emails) * 100),
         color: "#22C55E",
@@ -58,9 +50,8 @@ export function ThreatIntelligenceChart({
     if (!data) return [];
 
     return [
-      { name: "Malicious", value: data.malicious_count, color: "#EF4444" },
-      { name: "Suspicious", value: data.suspicious_count, color: "#F59E0B" },
-      { name: "Clean", value: data.clean_count, color: "#22C55E" },
+      { name: "Phishing", value: data.malicious_count, color: "#EF4444" },
+      { name: "Legitimate", value: data.clean_count, color: "#22C55E" },
     ].filter((item) => item.value > 0);
   }, [data]);
 
