@@ -242,8 +242,8 @@ export interface SettingsAuditEntry {
   action: "create" | "update" | "delete" | "export" | "import";
   category: string;
   field_name: string;
-  old_value: any;
-  new_value: any;
+  old_value: string | number | boolean | null | undefined;
+  new_value: string | number | boolean | null | undefined;
   ip_address: string;
   user_agent: string;
   reason?: string;
@@ -279,7 +279,7 @@ export interface FormFieldConfig {
     pattern?: string;
     custom?: string;
   };
-  options?: { value: any; label: string }[];
+  options?: { value: string | number | boolean; label: string }[];
   depends_on?: string;
   admin_only?: boolean;
   sensitive?: boolean;

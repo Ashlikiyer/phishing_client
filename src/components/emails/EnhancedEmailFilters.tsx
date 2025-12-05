@@ -91,7 +91,10 @@ export function EnhancedEmailFilters({
   }, [localFilters, onFiltersChange]);
 
   const updateLocalFilter = useCallback(
-    (key: keyof EmailFilterParams, value: any) => {
+    <K extends keyof EmailFilterParams>(
+      key: K,
+      value: EmailFilterParams[K]
+    ) => {
       setLocalFilters((prev) => ({ ...prev, [key]: value }));
     },
     []
@@ -136,7 +139,10 @@ export function EnhancedEmailFilters({
         <div className="flex flex-col md:flex-row gap-4 mb-4">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={18}
+              />
               <input
                 type="text"
                 placeholder="Search emails by sender or subject..."
@@ -175,8 +181,8 @@ export function EnhancedEmailFilters({
           <button
             className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
               showAdvanced
-                ? 'bg-cyan-900/50 border-cyan-400 text-cyan-400'
-                : 'border-gray-600 text-gray-400 hover:border-gray-500 hover:text-white'
+                ? "bg-cyan-900/50 border-cyan-400 text-cyan-400"
+                : "border-gray-600 text-gray-400 hover:border-gray-500 hover:text-white"
             }`}
             onClick={() => setShowAdvanced(!showAdvanced)}
           >
@@ -199,9 +205,13 @@ export function EnhancedEmailFilters({
       {/* Results Summary */}
       <div className="border-t border-gray-700 pt-4">
         <div className="text-sm text-gray-400">
-          <span className="text-white font-medium">{filteredCount.toLocaleString()}</span>
+          <span className="text-white font-medium">
+            {filteredCount.toLocaleString()}
+          </span>
           <span className="mx-1">of</span>
-          <span className="text-white font-medium">{totalCount.toLocaleString()}</span>
+          <span className="text-white font-medium">
+            {totalCount.toLocaleString()}
+          </span>
           <span className="ml-1">emails</span>
           {hasActiveFilters && !loading && (
             <span className="ml-3 inline-flex items-center gap-1 px-2 py-1 bg-cyan-900/20 border border-cyan-700 text-cyan-400 text-xs font-medium rounded-full">
@@ -220,7 +230,9 @@ export function EnhancedEmailFilters({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Mail size={16} className="text-blue-400" />
-                <span className="text-sm font-medium text-white">Sender & Domain</span>
+                <span className="text-sm font-medium text-white">
+                  Sender & Domain
+                </span>
               </div>
               <div className="space-y-3">
                 <input
@@ -261,7 +273,9 @@ export function EnhancedEmailFilters({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Shield size={16} className="text-green-400" />
-                <span className="text-sm font-medium text-white">Threat Level</span>
+                <span className="text-sm font-medium text-white">
+                  Threat Level
+                </span>
               </div>
               <select
                 value={localFilters.threat_level || ""}
@@ -283,7 +297,9 @@ export function EnhancedEmailFilters({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <User size={16} className="text-purple-400" />
-                <span className="text-sm font-medium text-white">CTI Confidence</span>
+                <span className="text-sm font-medium text-white">
+                  CTI Confidence
+                </span>
               </div>
               <select
                 value={localFilters.cti_confidence || ""}
@@ -305,7 +321,9 @@ export function EnhancedEmailFilters({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Shield size={16} className="text-red-400" />
-                <span className="text-sm font-medium text-white">Phishing Score Range</span>
+                <span className="text-sm font-medium text-white">
+                  Phishing Score Range
+                </span>
               </div>
               <div className="flex gap-2">
                 <input
@@ -316,7 +334,10 @@ export function EnhancedEmailFilters({
                   step="0.01"
                   value={localFilters.score_min || ""}
                   onChange={(e) =>
-                    updateLocalFilter("score_min", e.target.value ? parseFloat(e.target.value) : undefined)
+                    updateLocalFilter(
+                      "score_min",
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
                   }
                   className="flex-1 px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none transition-colors"
                   title="Minimum phishing score (0.0 - 1.0)"
@@ -330,7 +351,10 @@ export function EnhancedEmailFilters({
                   step="0.01"
                   value={localFilters.score_max || ""}
                   onChange={(e) =>
-                    updateLocalFilter("score_max", e.target.value ? parseFloat(e.target.value) : undefined)
+                    updateLocalFilter(
+                      "score_max",
+                      e.target.value ? parseFloat(e.target.value) : undefined
+                    )
                   }
                   className="flex-1 px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:border-cyan-400 focus:outline-none transition-colors"
                   title="Maximum phishing score (0.0 - 1.0)"
@@ -342,7 +366,9 @@ export function EnhancedEmailFilters({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Calendar size={16} className="text-cyan-400" />
-                <span className="text-sm font-medium text-white">Date Range</span>
+                <span className="text-sm font-medium text-white">
+                  Date Range
+                </span>
               </div>
               <div className="space-y-3">
                 <div className="flex gap-2">
@@ -384,7 +410,9 @@ export function EnhancedEmailFilters({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Paperclip size={16} className="text-orange-400" />
-                <span className="text-sm font-medium text-white">Attachments</span>
+                <span className="text-sm font-medium text-white">
+                  Attachments
+                </span>
               </div>
               <div className="space-y-2">
                 <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-700/50 p-2 rounded-lg transition-colors">
@@ -407,7 +435,9 @@ export function EnhancedEmailFilters({
                     onChange={() => updateLocalFilter("has_attachments", true)}
                     className="w-4 h-4 text-cyan-400 bg-gray-900 border-gray-600 rounded focus:ring-cyan-400 focus:ring-2"
                   />
-                  <span className="text-sm text-gray-300">With attachments</span>
+                  <span className="text-sm text-gray-300">
+                    With attachments
+                  </span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-700/50 p-2 rounded-lg transition-colors">
                   <input
@@ -417,7 +447,9 @@ export function EnhancedEmailFilters({
                     onChange={() => updateLocalFilter("has_attachments", false)}
                     className="w-4 h-4 text-cyan-400 bg-gray-900 border-gray-600 rounded focus:ring-cyan-400 focus:ring-2"
                   />
-                  <span className="text-sm text-gray-300">Without attachments</span>
+                  <span className="text-sm text-gray-300">
+                    Without attachments
+                  </span>
                 </label>
               </div>
             </div>
@@ -434,9 +466,7 @@ export function EnhancedEmailFilters({
                     type="radio"
                     name="urls"
                     checked={localFilters.has_urls === undefined}
-                    onChange={() =>
-                      updateLocalFilter("has_urls", undefined)
-                    }
+                    onChange={() => updateLocalFilter("has_urls", undefined)}
                     className="w-4 h-4 text-cyan-400 bg-gray-900 border-gray-600 rounded focus:ring-cyan-400 focus:ring-2"
                   />
                   <span className="text-sm text-gray-300">All emails</span>

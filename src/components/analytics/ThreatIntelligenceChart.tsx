@@ -71,8 +71,12 @@ export function ThreatIntelligenceChart({
       <div className="bg-gray-900 border border-gray-700 rounded-lg p-8">
         <div className="flex flex-col items-center justify-center space-y-4 text-center">
           <AlertTriangle size={48} className="text-red-400" />
-          <h3 className="text-lg font-semibold text-white">No Data Available</h3>
-          <p className="text-gray-400">Unable to load threat intelligence data</p>
+          <h3 className="text-lg font-semibold text-white">
+            No Data Available
+          </h3>
+          <p className="text-gray-400">
+            Unable to load threat intelligence data
+          </p>
         </div>
       </div>
     );
@@ -85,8 +89,12 @@ export function ThreatIntelligenceChart({
         {/* Threat Distribution Bar Chart */}
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-white">Threat Distribution</h3>
-            <p className="text-sm text-gray-400">Email classification breakdown</p>
+            <h3 className="text-lg font-semibold text-white">
+              Threat Distribution
+            </h3>
+            <p className="text-sm text-gray-400">
+              Email classification breakdown
+            </p>
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -94,10 +102,7 @@ export function ThreatIntelligenceChart({
                 data={chartData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
               >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#E5E7EB"
-                />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis
                   dataKey="name"
                   tick={{ fill: "#9CA3AF", fontSize: 12 }}
@@ -122,11 +127,7 @@ export function ThreatIntelligenceChart({
                   ]}
                 />
                 <Legend />
-                <Bar
-                  dataKey="count"
-                  fill="#3B82F6"
-                  radius={[4, 4, 0, 0]}
-                />
+                <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -135,8 +136,12 @@ export function ThreatIntelligenceChart({
         {/* Threat Distribution Pie Chart */}
         <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-white">Threat Composition</h3>
-            <p className="text-sm text-gray-400">Proportional threat analysis</p>
+            <h3 className="text-lg font-semibold text-white">
+              Threat Composition
+            </h3>
+            <p className="text-sm text-gray-400">
+              Proportional threat analysis
+            </p>
           </div>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
@@ -146,7 +151,7 @@ export function ThreatIntelligenceChart({
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={(entry: any) =>
+                  label={(entry: { name: string; value: number }) =>
                     `${entry.name} (${(
                       (Number(entry.value) / data.total_emails) *
                       100
@@ -181,5 +186,5 @@ export function ThreatIntelligenceChart({
         </div>
       </div>
     </div>
-  )
+  );
 }

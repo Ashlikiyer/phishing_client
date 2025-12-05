@@ -3,13 +3,7 @@
 import { useState, createContext, useContext } from "react";
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import {
-  Home,
-  Mail,
-  BarChart3,
-  Settings,
-  Shield,
-} from "lucide-react";
+import { Home, Mail, BarChart3, Settings, Shield } from "lucide-react";
 
 interface SidebarItem {
   id: string;
@@ -27,6 +21,7 @@ interface SidebarContextType {
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSidebar = () => {
   const context = useContext(SidebarContext);
   if (!context) {
@@ -35,7 +30,9 @@ export const useSidebar = () => {
   return context;
 };
 
-export const SidebarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const SidebarProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleSidebar = () => {
@@ -80,9 +77,11 @@ export function Sidebar() {
   ];
 
   return (
-    <aside className={`fixed top-0 left-0 h-screen bg-gray-800 border-r border-gray-700 flex flex-col transition-all duration-300 ease-in-out z-40 ${
-      isCollapsed ? 'w-20' : 'w-70'
-    }`}>
+    <aside
+      className={`fixed top-0 left-0 h-screen bg-gray-800 border-r border-gray-700 flex flex-col transition-all duration-300 ease-in-out z-40 ${
+        isCollapsed ? "w-20" : "w-70"
+      }`}
+    >
       {/* Logo Section */}
       <div className="flex items-center justify-between p-6 border-b border-gray-700 min-h-20">
         <div className="flex items-center gap-2">
@@ -105,8 +104,8 @@ export function Sidebar() {
                 className={({ isActive }) =>
                   `flex items-center w-full px-6 py-3 bg-transparent border-none text-gray-300 no-underline transition-all duration-200 cursor-pointer rounded-none relative ${
                     isActive
-                      ? 'bg-green-400/10 text-green-400 border-r-4 border-green-400'
-                      : 'hover:bg-gray-700 hover:text-white'
+                      ? "bg-green-400/10 text-green-400 border-r-4 border-green-400"
+                      : "hover:bg-gray-700 hover:text-white"
                   }`
                 }
                 title={isCollapsed ? item.label : undefined}
@@ -116,7 +115,9 @@ export function Sidebar() {
                 </span>
                 {!isCollapsed && (
                   <>
-                    <span className="ml-3 text-sm font-medium flex-1 text-left">{item.label}</span>
+                    <span className="ml-3 text-sm font-medium flex-1 text-left">
+                      {item.label}
+                    </span>
                     {item.badge && (
                       <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full min-w-5 text-center ml-auto">
                         {item.badge}

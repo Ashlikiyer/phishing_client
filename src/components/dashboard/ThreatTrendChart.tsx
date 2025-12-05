@@ -28,10 +28,18 @@ export function ThreatTrendChart({
 }: ThreatTrendChartProps) {
   const chartData = data || [];
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{ value: number; color: string; name: string }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       const total = payload.reduce(
-        (sum: number, entry: any) => sum + entry.value,
+        (sum: number, entry: { value: number }) => sum + entry.value,
         0
       );
 
@@ -42,16 +50,23 @@ export function ThreatTrendChart({
             <span className="text-xs text-gray-500">{total} total emails</span>
           </div>
           <div className="flex flex-col gap-1">
-            {payload.map((entry: any, index: number) => (
-              <div key={index} className="flex items-center gap-2 text-xs">
-                <div
-                  className="w-2 h-2 rounded"
-                  style={{ backgroundColor: entry.color }}
-                ></div>
-                <span className="text-gray-600 min-w-16">{entry.name}:</span>
-                <span className="font-medium text-gray-900 ml-auto">{entry.value}</span>
-              </div>
-            ))}
+            {payload.map(
+              (
+                entry: { color: string; name: string; value: number },
+                index: number
+              ) => (
+                <div key={index} className="flex items-center gap-2 text-xs">
+                  <div
+                    className="w-2 h-2 rounded"
+                    style={{ backgroundColor: entry.color }}
+                  ></div>
+                  <span className="text-gray-600 min-w-16">{entry.name}:</span>
+                  <span className="font-medium text-gray-900 ml-auto">
+                    {entry.value}
+                  </span>
+                </div>
+              )
+            )}
           </div>
         </div>
       );
@@ -68,7 +83,13 @@ export function ThreatTrendChart({
               <div
                 key={i}
                 className={`flex-1 bg-linear-to-t from-gray-200 via-gray-100 to-transparent rounded animate-pulse ${
-                  i === 0 ? 'h-3/5' : i === 1 ? 'h-4/5' : i === 2 ? 'h-2/5' : 'h-7/10'
+                  i === 0
+                    ? "h-3/5"
+                    : i === 1
+                    ? "h-4/5"
+                    : i === 2
+                    ? "h-2/5"
+                    : "h-7/10"
                 }`}
                 style={{ animationDelay: `${i * 0.2}s` }}
               ></div>
@@ -101,17 +122,17 @@ export function ThreatTrendChart({
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
             <defs>
-              <linearGradient id="legitimateGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#0DBB64" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#0DBB64" stopOpacity={0.1} />
-              </linearGradient>
               <linearGradient
-                id="phishingGradient"
+                id="legitimateGradient"
                 x1="0"
                 y1="0"
                 x2="0"
                 y2="1"
               >
+                <stop offset="5%" stopColor="#0DBB64" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#0DBB64" stopOpacity={0.1} />
+              </linearGradient>
+              <linearGradient id="phishingGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#ED3333" stopOpacity={0.3} />
                 <stop offset="95%" stopColor="#ED3333" stopOpacity={0.1} />
               </linearGradient>

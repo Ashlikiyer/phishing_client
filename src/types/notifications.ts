@@ -16,7 +16,7 @@ export interface Notification {
   duration?: number; // Auto-dismiss time in milliseconds
   persistent?: boolean; // If true, requires manual dismissal
   actions?: NotificationAction[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   read?: boolean;
 }
 
@@ -60,7 +60,7 @@ export interface WebSocketMessage {
     | "system_update"
     | "email_scan_complete"
     | "threat_detected";
-  payload: any;
+  payload: Record<string, unknown>;
   timestamp: string;
 }
 
