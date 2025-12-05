@@ -89,7 +89,7 @@ export function Sidebar() {
           <Shield className="text-green-400 shrink-0" size={24} />
           {!isCollapsed && (
             <span className="text-lg font-bold text-white whitespace-nowrap">
-              Phishing<span className="text-green-400">Guard</span>
+              Aura<span className="text-green-400">lis</span>
             </span>
           )}
         </div>

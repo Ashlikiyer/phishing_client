@@ -2,8 +2,8 @@ import axios, { type ResponseType } from "axios";
 
 const api = axios.create({
   // baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api/",
-  baseURL: "https://careerapp.xyz/api/",
-  // baseURL: "http://localhost:5000/api/", // if localhost
+  // baseURL: "https://careerapp.xyz/api/",
+  baseURL: "http://localhost:3000/api/", // if localhost
 });
 
 // Helper function to get cookie value by name
